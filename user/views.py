@@ -1,3 +1,4 @@
+from threading import local
 from rest_framework.permissions import AllowAny, IsAuthenticated
 from inspect import isfunction
 from msilib.schema import AppId
@@ -58,57 +59,37 @@ def User_list (request):
                 
         if request.method == 'POST':
                 localrequest = JSONParser().parse(request)
-                        
+                localserializer = masterserialzer (data=localrequest)        
                 with transaction.atomic():
-                                sid = transaction.savepoint()
-                                try:
-                                        usersave = User (
-                                                id = localrequest.get['id'],
-                                                password = localrequest.get['password'],
-                                                last_login = localrequest.get['last_login'],
-                                                is_superuser = localrequest.get['is_superuser'],
-                                                username = localrequest.get['username'], 
-                                                first_name = localrequest.get['first_name'], 
-                                                last_name = localrequest.get['last_name'],
-                                                email = localrequest.get['email'],
-                                                is_staff = localrequest.get['is_staff'],
-                                                is_active = localrequest.get['is_active'],
-                                                date_joined = localrequest.get['date_joined']
-                                        )
-                                        usersave.save()
-                                        
-                                        for obj in localrequest :
-                                                id_users = userdetail.objects.filter(id = obj['id']).first()
+                        sid = transaction.savepoint()
+                        try:
+                                if localserializer.is_valid():
                                                 
-                                                details = userdetail (
-                                                        id = id_users,
-                                                        id_default = localrequest.get['id_role'],
-                                                        role = localrequest.get['role'],
-                                                        reward = localrequest.get['reward'],
-                                                        point = localrequest.get['point'],
-                                                        coin = localrequest.get['coin'],
-                                                        phone_number = localrequest.get['phone_number'],
-                                                        app_id = APP_ID,
-                                                        code_status = localrequest.get['code_status']
-                                                )
-                                                details.save()
-                                        transaction.savepoint_commit(sid)
-                                except IntegrityError:
-                                        transaction.savepoint_rollback(sid)
-
-                                mastermodel = User.objects.all()
-                                masterserialzer = RegistrationSerializer (mastermodel, many=True)
+                                        id_users = userdetail.objects.filter(id = localrequest['id']).first()
+                                        details = userdetail (
+                                                id = id_users,
+                                                id_default = localrequest.get['id_role'],
+                                                role = localrequest.get['role'],
+                                                reward = localrequest.get['reward'],
+                                                point = localrequest.get['point'],
+                                                coin = localrequest.get['coin'],
+                                                phone_number = localrequest.get['phone_number'],
+                                                app_id = APP_ID,
+                                                code_status = localrequest.get['code_status']
+                                        )
+                                        details.save()
+                                transaction.savepoint_commit(sid)
+                        except IntegrityError:
+                                transaction.savepoint_rollback(sid)
                                         
-                                mymodels = userdetail.objects.all() 
-                                serializerss = UserSerializer (mymodels, many=True)
+                        mymodels = userdetail.objects.all() 
+                        serializerss = UserSerializer (mymodels, many=True)
                                         
-                                formater = {
-                                #        "master" : [{'User':localserializer.data},{'user_detail':localserializers.data}]
-                                        "master" : localserializer.data,
-                                        "detail" : localserializers.data
-                                }
+                        formater = {
+                                "detail" : serializerss.data
+                        }
                                 
-                                return JsonResponse({'message' : 'successfully' , 'status' : True , 'count' : 1 , 'results' : formater},
+                        return JsonResponse({'message' : 'successfully' , 'status' : True , 'count' : 1 , 'results' : formater},
                                         status=201) 
         return JsonResponse(localserializer.errors, status=400)
 
@@ -134,62 +115,21 @@ def Users_details (request, pk):
                 return JsonResponse({'message': 'successfully', 'status': True, 'count': 1, 
                                      'results': formater})
         
-        if request.method == 'POST':
+        elif request.method == 'PUT': 
                 localrequest = JSONParser().parse(request)
-                localserializer = masterserialzer(data=localrequest)
-                if localserializer.is_valid():
-                                
-                        with transaction.atomic():
-                                sid = transaction.savepoint()
-                                try:
-                                        usersave = User (
-                                                id = localrequest.get['id'],
-                                                password = localrequest.get['password'],
-                                                last_login = localrequest.get['last_login'],
-                                                is_superuser = localrequest.get['is_superuser'],
-                                                username = localrequest.get['username'], 
-                                                first_name = localrequest.get['first_name'], 
-                                                last_name = localrequest.get['last_name'],
-                                                email = localrequest.get['email'],
-                                                is_staff = localrequest.get['is_staff'],
-                                                is_active = localrequest.get['is_active'],
-                                                date_joined = localrequest.get['date_joined']
-                                        )
-                                        usersave.save()
-                                        
-                                        for obj in localrequest :
-                                                id_users = userdetail.objects.filter(id = obj['id']).first()
-                                                
-                                                details = userdetail (
-                                                        id = id_users,
-                                                        id_default = localrequest.get['id_role'],
-                                                        role = localrequest.get['role'],
-                                                        reward = localrequest.get['reward'],
-                                                        point = localrequest.get['point'],
-                                                        coin = localrequest.get['coin'],
-                                                        phone_number = localrequest.get['phone_number'],
-                                                        app_id = APP_ID,
-                                                        code_status = localrequest.get['code_status']
-                                                )
-                                                details.save()
-                                        transaction.savepoint_commit(sid)
-                                except IntegrityError:
-                                        transaction.savepoint_rollback(sid)
+                localserializer = masterserialzer(data=localrequest) 
 
-                                mastermodel = User.objects.all()
-                                masterserialzer = RegistrationSerializer (mastermodel, many=True)
-                                        
-                                mymodels = userdetail.objects.all() 
-                                serializerss = UserSerializer (mymodels, many=True)
-                                        
-                                formater = {
-                                       "master" : [{'User':masterserialzer.data},{'user_detail':serializerss.data}],
-                                        # "master" : localserializer.data,
-                                        # "detail" : localserializers.data
-                                }
-                                
-                                return JsonResponse({'message' : 'successfully' , 'status' : True , 'count' : 1 , 'results' : formater},
+                if localserializer.is_valid(): 
+                
+                        localserializer.save()  
+                
+                        localmodel = mastermodel.objects.all()
+                        localserializer = masterserialzer(localmodel, many=True)
+
+                        return JsonResponse({'message' : 'successfully' , 'status' : True , 'count' : 1 , 
+                                             'results' : localserializer.data},
                                         status=201)
+                return JsonResponse(localserializer.errors, status=400)
         
 @csrf_exempt
 @api_view(["GET"])
