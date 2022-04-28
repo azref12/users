@@ -12,6 +12,10 @@ http://127.0.0.1:8000/user/
 user_detail : 
 http://127.0.0.1:8000/user/2/ 
 
+user > view_getuser (method -> POST, PUT, DELETE) w/ generic APIVIEW :
+http://127.0.0.1:8000/user/getuser/
+http://127.0.0.1:8000/user/getuser/3/ (w/ <int:pk>)
+
 user/user_active :
 http://127.0.0.1:8000/user/user_active/?status=/is_nonactive
 http://127.0.0.1:8000/user/user_active/?status=/is_active

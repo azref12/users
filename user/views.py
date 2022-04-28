@@ -68,12 +68,12 @@ def User_list (request):
                                         id_users = userdetail.objects.filter(id = localrequest['id']).first()
                                         details = userdetail (
                                                 id = id_users,
-                                                id_default = localrequest.get['id_role'],
-                                                role = localrequest.get['role'],
-                                                reward = localrequest.get['reward'],
-                                                point = localrequest.get['point'],
-                                                coin = localrequest.get['coin'],
-                                                phone_number = localrequest.get['phone_number'],
+                                                id_default = localrequest.data.get['id_role'],
+                                                role = localrequest.data.get['role'],
+                                                reward = localrequest.data.get['reward'],
+                                                point = localrequest.data.get['point'],
+                                                coin = localrequest.data.get['coin'],
+                                                phone_number = localrequest.data.get['phone_number'],
                                                 app_id = APP_ID,
                                                 code_status = localrequest.get['code_status']
                                         )
@@ -127,8 +127,7 @@ def Users_details (request, pk):
                         localserializer = masterserialzer(localmodel, many=True)
 
                         return JsonResponse({'message' : 'successfully' , 'status' : True , 'count' : 1 , 
-                                             'results' : localserializer.data},
-                                        status=201)
+                                             'results' : localserializer.data}, status=201)
                 return JsonResponse(localserializer.errors, status=400)
         
 @csrf_exempt
